@@ -30,7 +30,7 @@ A comprehensive React-based web application designed for therapists and counselo
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/yosephdev/isana-facilitation
    cd isana-facilitation-platform
    ```
 
