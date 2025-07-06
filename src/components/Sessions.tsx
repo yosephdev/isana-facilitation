@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, User, Plus, Filter, Search, MoreVertical } from 'lucide-react';
-import { mockSessions } from '../data/mockData';
+import { useAppStore } from '../store/useAppStore';
 import { Session } from '../types';
+import AddSessionModal from './AddSessionModal';
 
 interface SessionsProps {
   onSessionSelect: (session: Session) => void;
 }
 
 const Sessions: React.FC<SessionsProps> = ({ onSessionSelect }) => {
+  const { sessions, isLoading, error } = useAppStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [showAddSession, setShowAddSession] = useState(false);
 
-  const filteredSessions = mockSessions.filter(session => {
+  const filteredSessions = sessions.filter(session => {
     const matchesSearch = session.clientName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || session.status === statusFilter;
     const matchesType = typeFilter === 'all' || session.type === typeFilter;
@@ -121,7 +124,10 @@ const Sessions: React.FC<SessionsProps> = ({ onSessionSelect }) => {
           <h1 className="text-3xl font-bold text-gray-900">Sessions</h1>
           <p className="text-gray-600">Manage and track your therapy sessions</p>
         </div>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+        <button 
+          onClick={() => setShowAddSession(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+        >
           <Plus size={20} />
           <span>Schedule Session</span>
         </button>
@@ -170,7 +176,7 @@ const Sessions: React.FC<SessionsProps> = ({ onSessionSelect }) => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-blue-50 rounded-lg p-4">
           <p className="text-sm font-medium text-blue-600">Total Sessions</p>
-          <p className="text-2xl font-bold text-blue-900">{mockSessions.length}</p>
+          <p className="text-2xl font-bold text-blue-900">{sessions.length}</p>
         </div>
         <div className="bg-green-50 rounded-lg p-4">
           <p className="text-sm font-medium text-green-600">Upcoming</p>
@@ -203,6 +209,10 @@ const Sessions: React.FC<SessionsProps> = ({ onSessionSelect }) => {
           <h3 className="text-lg font-medium text-gray-900 mb-2">No sessions found</h3>
           <p className="text-gray-600">Try adjusting your search terms or filters</p>
         </div>
+      )}
+
+      {showAddSession && (
+        <AddSessionModal onClose={() => setShowAddSession(false)} />
       )}
     </div>
   );
