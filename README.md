@@ -5,6 +5,7 @@ A comprehensive React-based web application designed for therapists and counselo
 ## 🌟 Features
 
 ### Core Functionality
+
 - **Client Management**: Complete client profiles with contact information, treatment goals, and session history
 - **Session Management**: Schedule, track, and document therapy sessions with detailed notes
 - **Dashboard Analytics**: Real-time insights into practice metrics and performance
@@ -13,6 +14,7 @@ A comprehensive React-based web application designed for therapists and counselo
 - **Reminders**: Client-specific reminders and follow-up notifications
 
 ### Technical Features
+
 - **TypeScript**: Full type safety across the application
 - **State Management**: Zustand for efficient state management
 - **Lazy Loading**: Code-splitting for optimal performance
@@ -23,34 +25,40 @@ A comprehensive React-based web application designed for therapists and counselo
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - npm or yarn
 
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/yosephdev/isana-facilitation
    cd isana-facilitation-platform
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set up environment variables**
+
    ```bash
    cp .env.example .env
    # Edit .env with your configuration
    ```
 
 4. **Start development server**
+
    ```bash
    npm run dev
    ```
 
 5. **Build for production**
+
    ```bash
    npm run build
    ```
@@ -82,6 +90,7 @@ src/
 ## 🎨 Component Architecture
 
 ### Core Components
+
 - **Navigation**: Responsive sidebar navigation with mobile support
 - **Dashboard**: Analytics dashboard with charts and quick actions
 - **Clients**: Client management with search, filtering, and detailed profiles
@@ -89,6 +98,7 @@ src/
 - **Calendar**: Full-featured calendar with FullCalendar.js integration
 
 ### UI Components
+
 - **Modal**: Accessible modal component with focus management
 - **LoadingSkeleton**: Animated loading states for better UX
 - **SessionChart**: Analytics charts using Chart.js
@@ -146,6 +156,7 @@ Comprehensive TypeScript types for all entities:
 ## 🔌 Service Layer
 
 ### Authentication Service
+
 ```typescript
 authService.login(email, password)
 authService.logout()
@@ -153,6 +164,7 @@ authService.getCurrentUser()
 ```
 
 ### Calendar Service
+
 ```typescript
 calendarService.getEvents(startDate, endDate)
 calendarService.syncWithGoogleCalendar()
@@ -160,6 +172,7 @@ calendarService.getAvailableSlots(date, duration)
 ```
 
 ### Notes Service
+
 ```typescript
 notesService.saveNotes(sessionId, notes)
 notesService.autoSaveNotes(sessionId, notes)
@@ -169,6 +182,7 @@ notesService.exportToPDF(session, notes)
 ## 🎨 Design System
 
 ### Colors
+
 - **Primary**: Blue (#3B82F6) - Trust and professionalism
 - **Secondary**: Teal (#10B981) - Healing and growth
 - **Accent**: Purple (#8B5CF6) - Creativity and insight
@@ -177,11 +191,13 @@ notesService.exportToPDF(session, notes)
 - **Error**: Red (#EF4444) - Alerts and critical actions
 
 ### Typography
+
 - **Headings**: Inter font family, 120% line height
 - **Body**: Inter font family, 150% line height
 - **Weights**: Regular (400), Medium (500), Semibold (600), Bold (700)
 
 ### Spacing
+
 - **System**: 8px base unit (0.5rem increments)
 - **Components**: Consistent padding and margins using Tailwind spacing scale
 
@@ -202,6 +218,7 @@ notesService.exportToPDF(session, notes)
 ## 🔮 Future Enhancements
 
 ### Planned Features
+
 - Real-time chat integration for virtual sessions
 - File sharing and document management
 - Advanced reporting and analytics
@@ -210,6 +227,7 @@ notesService.exportToPDF(session, notes)
 - Telehealth video integration
 
 ### Technical Roadmap
+
 - Progressive Web App (PWA) support
 - Offline functionality
 - Real-time collaboration
@@ -231,6 +249,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🆘 Support
 
 For support and questions:
+
 - Create an issue in the GitHub repository
 - Contact the development team
 - Check the documentation wiki
