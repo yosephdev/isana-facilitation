@@ -1,6 +1,5 @@
 import React, { useEffect, lazy, Suspense } from 'react';
 import { useAppStore } from './store/useAppStore';
-import { mockClients, mockSessions, mockReminders, mockUser } from './data/mockData';
 import Navigation from './components/Navigation';
 import LoadingSkeleton from './components/ui/LoadingSkeleton';
 
@@ -11,11 +10,12 @@ const SessionsPage = lazy(() => import('./components/Sessions'));
 const ClientDetailPage = lazy(() => import('./components/ClientDetail'));
 const SessionDetailPage = lazy(() => import('./components/SessionDetail'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const ReminderManager = lazy(() => import('./components/ReminderManager'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
 
 function App() {
   const {
     user,
-    setUser,
     setClients,
     setSessions,
     setReminders,
@@ -27,19 +27,17 @@ function App() {
     setSelectedSession,
     isMobileMenuOpen,
     setMobileMenuOpen,
-    darkMode
+    darkMode,
+    isLoading,
+    initializeAuth
   } = useAppStore();
 
-  // Initialize app data
+  // Initialize app data and authentication
   useEffect(() => {
-    // Set mock user
-    setUser(mockUser);
+    initializeAuth();
     
-    // Load mock data
-    setClients(mockClients);
-    setSessions(mockSessions);
-    setReminders(mockReminders);
-  }, [setUser, setClients, setSessions, setReminders]);
+    // Data is now fetched via initializeAuth and fetchUserData
+  }, [initializeAuth, setClients, setSessions, setReminders]);
 
   // Apply dark mode to document
   useEffect(() => {
@@ -119,6 +117,12 @@ function App() {
             <SettingsPage />
           </Suspense>
         );
+      case 'reminders':
+        return (
+          <Suspense fallback={<LoadingSkeleton variant="card" className="h-96" />}>
+            <ReminderManager />
+          </Suspense>
+        );
       default:
         return (
           <Suspense fallback={<LoadingSkeleton variant="card" className="h-96" />}>
@@ -127,6 +131,22 @@ function App() {
         );
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
+        <LoadingSkeleton variant="spinner" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Suspense fallback={<LoadingSkeleton variant="spinner" />}>
+        <LoginPage />
+      </Suspense>
+    );
+  }
 
   return (
     <div className={`flex h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>

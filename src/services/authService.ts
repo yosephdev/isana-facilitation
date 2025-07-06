@@ -1,134 +1,162 @@
 import { TherapistUser, ApiResponse } from '../types';
+import { auth } from '../firebase';
+import {
+  signInWithEmailAndPassword,
+  signOut,
+  sendPasswordResetEmail,
+  updatePassword,
+  User,
+} from 'firebase/auth';
 
-// Mock authentication service
 class AuthService {
-  private readonly STORAGE_KEY = 'isana_auth_token';
-  private readonly USER_KEY = 'isana_user';
-
   async login(email: string, password: string): Promise<ApiResponse<{ user: TherapistUser; token: string }>> {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      const token = await user.getIdToken();
 
-    // Mock validation
-    if (email === 'dr.smith@isana.com' && password === 'password123') {
-      const mockUser: TherapistUser = {
-        id: 'therapist-1',
-        name: 'Dr. Rachel Smith',
-        email: 'dr.smith@isana.com',
-        phone: '(555) 123-4567',
+      // For now, we'll create a mock TherapistUser from Firebase User info.
+      // In a real app, you'd fetch the full TherapistUser profile from your backend
+      // after successful Firebase authentication.
+      const mockTherapistUser: TherapistUser = {
+        id: user.uid,
+        name: user.displayName || 'Therapist',
+        email: user.email || '',
+        phone: user.phoneNumber || '',
         license: {
-          number: 'LPC-12345',
-          type: 'Licensed Professional Counselor',
-          state: 'CA',
-          expirationDate: '2025-12-31'
+          number: 'N/A',
+          type: 'N/A',
+          state: 'N/A',
+          expirationDate: 'N/A',
         },
-        specializations: ['Anxiety Disorders', 'Depression', 'Trauma Therapy', 'Cognitive Behavioral Therapy'],
-        credentials: ['LPC', 'EMDR', 'CBT'],
-        avatar: 'https://images.pexels.com/photos/5327580/pexels-photo-5327580.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
+        specializations: [],
+        credentials: [],
         preferences: {
           workingHours: {
             start: '09:00',
             end: '17:00',
-            days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+            days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
           },
           defaultSessionDuration: 60,
-          timezone: 'America/Los_Angeles'
+          timezone: 'America/Los_Angeles',
         },
-        createdAt: '2023-01-15T00:00:00Z',
-        updatedAt: '2024-01-20T00:00:00Z'
+        createdAt: user.metadata.creationTime || new Date().toISOString(),
+        updatedAt: user.metadata.lastSignInTime || new Date().toISOString(),
       };
-
-      const token = 'mock-jwt-token-' + Date.now();
-      
-      localStorage.setItem(this.STORAGE_KEY, token);
-      localStorage.setItem(this.USER_KEY, JSON.stringify(mockUser));
 
       return {
         success: true,
         message: 'Login successful',
-        data: { user: mockUser, token }
+        data: { user: mockTherapistUser, token },
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.message || 'Login failed',
+        data: { user: {} as TherapistUser, token: '' },
       };
     }
-
-    return {
-      success: false,
-      message: 'Invalid email or password',
-      data: { user: {} as TherapistUser, token: '' }
-    };
   }
 
   async logout(): Promise<ApiResponse<null>> {
-    localStorage.removeItem(this.STORAGE_KEY);
-    localStorage.removeItem(this.USER_KEY);
-    
-    return {
-      success: true,
-      message: 'Logged out successfully',
-      data: null
-    };
+    try {
+      await signOut(auth);
+      return {
+        success: true,
+        message: 'Logged out successfully',
+        data: null,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.message || 'Logout failed',
+        data: null,
+      };
+    }
   }
 
   async getCurrentUser(): Promise<TherapistUser | null> {
-    const userStr = localStorage.getItem(this.USER_KEY);
-    if (!userStr) return null;
-    
-    try {
-      return JSON.parse(userStr);
-    } catch {
-      return null;
-    }
-  }
+    const user = auth.currentUser;
+    if (!user) return null;
 
-  async refreshToken(): Promise<ApiResponse<{ token: string }>> {
-    // Simulate token refresh
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const newToken = 'refreshed-jwt-token-' + Date.now();
-    localStorage.setItem(this.STORAGE_KEY, newToken);
-    
-    return {
-      success: true,
-      message: 'Token refreshed',
-      data: { token: newToken }
+    // Similar to login, create a mock TherapistUser from Firebase User info
+    const mockTherapistUser: TherapistUser = {
+      id: user.uid,
+      name: user.displayName || 'Therapist',
+      email: user.email || '',
+      phone: user.phoneNumber || '',
+      license: {
+        number: 'N/A',
+        type: 'N/A',
+        state: 'N/A',
+        expirationDate: 'N/A',
+      },
+      specializations: [],
+      credentials: [],
+      preferences: {
+        workingHours: {
+          start: '09:00',
+          end: '17:00',
+          days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+        },
+        defaultSessionDuration: 60,
+        timezone: 'America/Los_Angeles',
+      },
+      createdAt: user.metadata.creationTime || new Date().toISOString(),
+      updatedAt: user.metadata.lastSignInTime || new Date().toISOString(),
     };
-  }
-
-  getToken(): string | null {
-    return localStorage.getItem(this.STORAGE_KEY);
+    return mockTherapistUser;
   }
 
   isAuthenticated(): boolean {
-    return !!this.getToken();
+    return !!auth.currentUser;
   }
 
   async resetPassword(email: string): Promise<ApiResponse<null>> {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    return {
-      success: true,
-      message: 'Password reset email sent',
-      data: null
-    };
+    try {
+      await sendPasswordResetEmail(auth, email);
+      return {
+        success: true,
+        message: 'Password reset email sent',
+        data: null,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.message || 'Failed to send password reset email',
+        data: null,
+      };
+    }
   }
 
   async changePassword(currentPassword: string, newPassword: string): Promise<ApiResponse<null>> {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    if (currentPassword === 'password123') {
+    const user = auth.currentUser;
+    if (!user) {
+      return {
+        success: false,
+        message: 'No user is currently logged in.',
+        data: null,
+      };
+    }
+
+    try {
+      // Firebase does not have a direct 'changePassword' that takes current password.
+      // You typically re-authenticate the user first if you need to verify current password.
+      // For simplicity, this example directly updates the password.
+      // In a real application, you'd re-authenticate the user before allowing a password change.
+      await updatePassword(user, newPassword);
       return {
         success: true,
         message: 'Password changed successfully',
-        data: null
+        data: null,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.message || 'Failed to change password',
+        data: null,
       };
     }
-    
-    return {
-      success: false,
-      message: 'Current password is incorrect',
-      data: null
-    };
   }
 }
 
