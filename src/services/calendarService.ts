@@ -1,130 +1,129 @@
 import { CalendarEvent, Session, ApiResponse } from '../types';
+import { db } from '../firebase';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  query,
+  where,
+  Timestamp,
+} from 'firebase/firestore';
+
+const calendarEventsCollectionRef = collection(db, 'calendarEvents');
 
 class CalendarService {
-  async getEvents(startDate: string, endDate: string): Promise<ApiResponse<CalendarEvent[]>> {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // Mock calendar events
-    const mockEvents: CalendarEvent[] = [
-      {
-        id: 'event-1',
-        title: 'Sarah Johnson - Individual Session',
-        start: '2024-01-22T10:00:00',
-        end: '2024-01-22T11:00:00',
-        clientId: '1',
-        sessionId: '1',
-        type: 'session',
-        color: '#3B82F6'
-      },
-      {
-        id: 'event-2',
-        title: 'Marcus Thompson - Individual Session',
-        start: '2024-01-22T14:00:00',
-        end: '2024-01-22T15:00:00',
-        clientId: '2',
-        sessionId: '2',
-        type: 'session',
-        color: '#10B981'
-      },
-      {
-        id: 'event-3',
-        title: 'Lunch Break',
-        start: '2024-01-22T12:00:00',
-        end: '2024-01-22T13:00:00',
-        type: 'break',
-        color: '#F59E0B',
-        editable: false
-      },
-      {
-        id: 'event-4',
-        title: 'Administrative Time',
-        start: '2024-01-23T09:00:00',
-        end: '2024-01-23T10:00:00',
-        type: 'admin',
-        color: '#8B5CF6'
-      }
-    ];
-
-    return {
-      success: true,
-      message: 'Events retrieved successfully',
-      data: mockEvents
-    };
+  async getEvents(startDate: string, endDate: string, userId: string): Promise<ApiResponse<CalendarEvent[]>> {
+    try {
+      const q = query(
+        calendarEventsCollectionRef,
+        where('userId', '==', userId),
+        where('start', '>=', startDate),
+        where('end', '<=', endDate)
+      );
+      const querySnapshot = await getDocs(q);
+      const events: CalendarEvent[] = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as Omit<CalendarEvent, 'id'>),
+      }));
+      return {
+        success: true,
+        message: 'Events retrieved successfully',
+        data: events,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.message || 'Failed to retrieve events',
+        data: [],
+      };
+    }
   }
 
-  async createEvent(event: Omit<CalendarEvent, 'id'>): Promise<ApiResponse<CalendarEvent>> {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const newEvent: CalendarEvent = {
-      ...event,
-      id: 'event-' + Date.now()
-    };
-
-    return {
-      success: true,
-      message: 'Event created successfully',
-      data: newEvent
-    };
+  async createEvent(event: Omit<CalendarEvent, 'id'>, userId: string): Promise<ApiResponse<CalendarEvent>> {
+    try {
+      const newEvent = {
+        ...event,
+        userId,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      };
+      const docRef = await addDoc(calendarEventsCollectionRef, newEvent);
+      return {
+        success: true,
+        message: 'Event created successfully',
+        data: { ...newEvent, id: docRef.id } as CalendarEvent,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.message || 'Failed to create event',
+        data: {} as CalendarEvent,
+      };
+    }
   }
 
   async updateEvent(id: string, updates: Partial<CalendarEvent>): Promise<ApiResponse<CalendarEvent>> {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // Mock updated event
-    const updatedEvent: CalendarEvent = {
-      id,
-      title: 'Updated Event',
-      start: '2024-01-22T10:00:00',
-      end: '2024-01-22T11:00:00',
-      type: 'session',
-      ...updates
-    };
-
-    return {
-      success: true,
-      message: 'Event updated successfully',
-      data: updatedEvent
-    };
+    try {
+      const eventDoc = doc(db, 'calendarEvents', id);
+      await updateDoc(eventDoc, { ...updates, updatedAt: Timestamp.now() });
+      // For simplicity, we're returning a partial event. In a real app, you might fetch the full updated event.
+      return {
+        success: true,
+        message: 'Event updated successfully',
+        data: { id, ...updates } as CalendarEvent,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.message || 'Failed to update event',
+        data: {} as CalendarEvent,
+      };
+    }
   }
 
   async deleteEvent(id: string): Promise<ApiResponse<null>> {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    return {
-      success: true,
-      message: 'Event deleted successfully',
-      data: null
-    };
+    try {
+      const eventDoc = doc(db, 'calendarEvents', id);
+      await deleteDoc(eventDoc);
+      return {
+        success: true,
+        message: 'Event deleted successfully',
+        data: null,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.message || 'Failed to delete event',
+        data: null,
+      };
+    }
   }
 
   async syncWithGoogleCalendar(): Promise<ApiResponse<{ syncedEvents: number }>> {
-    // Simulate Google Calendar sync
+    // This would involve Google API integration, which is beyond the scope of this task.
+    // Simulating success for now.
     await new Promise(resolve => setTimeout(resolve, 2000));
-
     return {
       success: true,
-      message: 'Calendar synced with Google Calendar',
-      data: { syncedEvents: 5 }
+      message: 'Calendar synced with Google Calendar (simulated)',
+      data: { syncedEvents: 0 },
     };
   }
 
   async getAvailableSlots(date: string, duration: number = 60): Promise<ApiResponse<string[]>> {
-    // Simulate API call delay
+    // This would involve complex scheduling logic and checking existing events.
+    // Simulating available slots for now.
     await new Promise(resolve => setTimeout(resolve, 500));
-
-    // Mock available time slots
     const availableSlots = [
       '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'
     ];
-
     return {
       success: true,
-      message: 'Available slots retrieved',
-      data: availableSlots
+      message: 'Available slots retrieved (simulated)',
+      data: availableSlots,
     };
   }
 
@@ -138,7 +137,7 @@ class CalendarService {
       sessionId: session.id,
       type: 'session',
       color: this.getSessionTypeColor(session.type),
-      editable: session.status === 'scheduled'
+      editable: session.status === 'scheduled',
     };
   }
 
@@ -148,7 +147,7 @@ class CalendarService {
       group: '#10B981',
       family: '#F59E0B',
       consultation: '#8B5CF6',
-      intake: '#EF4444'
+      intake: '#EF4444',
     };
     return colors[type] || '#6B7280';
   }

@@ -7,14 +7,19 @@ export const useCalendar = () => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { sessions } = useAppStore();
+  const { sessions, user } = useAppStore();
 
   const loadEvents = async (startDate: string, endDate: string) => {
+    if (!user?.id) {
+      setError('User not authenticated.');
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     setError(null);
     
     try {
-      const response = await calendarService.getEvents(startDate, endDate);
+      const response = await calendarService.getEvents(startDate, endDate, user.id);
       if (response.success) {
         // Combine API events with session events
         const sessionEvents = sessions.map(session => 
