@@ -1,7 +1,8 @@
-import React from 'react';
-import { ArrowLeft, Phone, Mail, Calendar, FileText, User, Target, Heart, Clock } from 'lucide-react';
-import { Client, Session } from '../types';
-import { mockSessions } from '../data/mockData';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Phone, Mail, Calendar, FileText, User, Target, Heart, Clock, UploadCloud, Download, Trash2 } from 'lucide-react';
+import { ClientProfile, Session } from '../types';
+import { useAppStore } from '../store/useAppStore';
+import { documentService } from '../services/documentService';
 
 interface ClientDetailProps {
   client: Client;
@@ -9,10 +10,55 @@ interface ClientDetailProps {
 }
 
 const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack }) => {
-  const clientSessions = mockSessions.filter(session => session.clientId === client.id);
+  const { getDocumentsByClientId, addDocument, removeDocument, sessions } = useAppStore();
+  const clientDocuments = getDocumentsByClientId(client.id);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const clientSessions = sessions.filter(session => session.clientId === client.id);
   const recentSessions = clientSessions
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      setSelectedFile(event.target.files[0]);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) return;
+
+    setIsUploading(true);
+    try {
+      const response = await documentService.uploadDocument(selectedFile, [client.id]);
+      if (response.success) {
+        addDocument(response.data);
+        setSelectedFile(null);
+      } else {
+        console.error('Upload failed:', response.message);
+      }
+    } catch (error) {
+      console.error('Error uploading document:', error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDeleteDocument = async (documentId: string) => {
+    if (window.confirm('Are you sure you want to delete this document?')) {
+      try {
+        const response = await documentService.deleteDocument(documentId);
+        if (response.success) {
+          removeDocument(documentId);
+        } else {
+          console.error('Delete failed:', response.message);
+        }
+      } catch (error) {
+        console.error('Error deleting document:', error);
+      }
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -129,6 +175,66 @@ const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack }) => {
             </div>
           </div>
 
+          {/* Documents */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+              <UploadCloud className="mr-2" size={20} />
+              Documents
+            </h2>
+            <div className="flex items-center space-x-3 mb-4">
+              <input
+                type="file"
+                onChange={handleFileChange}
+                aria-label="Upload document"
+                className="block w-full text-sm text-gray-500
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-full file:border-0
+                file:text-sm file:font-semibold
+                file:bg-blue-50 file:text-blue-700
+                hover:file:bg-blue-100"
+              />
+              <button
+                onClick={handleUpload}
+                disabled={!selectedFile || isUploading}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isUploading ? 'Uploading...' : 'Upload'}
+              </button>
+            </div>
+            {clientDocuments.length === 0 ? (
+              <p className="text-gray-600 text-sm">No documents uploaded for this client.</p>
+            ) : (
+              <ul className="space-y-2">
+                {clientDocuments.map((doc) => (
+                  <li key={doc.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <FileText size={20} className="text-gray-500" />
+                      <a href={doc.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                        {doc.name} ({ (doc.fileSize / 1024 / 1024).toFixed(2) } MB)
+                      </a>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => window.open(doc.url, '_blank')}
+                        className="p-1 rounded-full hover:bg-gray-200 text-gray-600"
+                        title="Download Document"
+                      >
+                        <Download size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteDocument(doc.id)}
+                        className="p-1 rounded-full hover:bg-red-100 text-red-600"
+                        title="Delete Document"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
           {/* Recent Sessions */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
@@ -157,8 +263,8 @@ const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack }) => {
                       </div>
                     )}
                   </div>
-                  {session.notes && (
-                    <p className="text-sm text-gray-700 line-clamp-2">{session.notes}</p>
+                  {session.notes?.presentingConcerns && (
+                    <p className="text-sm text-gray-700 line-clamp-2">{session.notes.presentingConcerns}</p>
                   )}
                 </div>
               ))}

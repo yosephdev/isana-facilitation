@@ -116,6 +116,17 @@ export interface Reminder extends BaseEntity {
   priority: 'low' | 'medium' | 'high';
 }
 
+export interface Document extends BaseEntity {
+  name: string;
+  url: string;
+  fileType: string;
+  fileSize: number; // in bytes
+  uploadedBy: string; // User ID or name
+  associatedClientIds?: string[];
+  associatedSessionIds?: string[];
+  description?: string;
+}
+
 export interface CalendarEvent {
   id: string;
   title: string;
