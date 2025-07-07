@@ -1,4 +1,4 @@
-import React, { useEffect, lazy, Suspense } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { useAppStore } from './store/useAppStore';
 import Navigation from './components/Navigation';
 import LoadingSkeleton from './components/ui/LoadingSkeleton';
@@ -11,7 +11,6 @@ const ClientDetailPage = lazy(() => import('./components/ClientDetail'));
 const SessionDetailPage = lazy(() => import('./components/SessionDetail'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const ReminderManager = lazy(() => import('./components/ReminderManager'));
-const LoginPage = lazy(() => import('./pages/LoginPage'));
 
 function App() {
   const {
@@ -135,16 +134,8 @@ function App() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
-        <LoadingSkeleton variant="spinner" />
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
       </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <Suspense fallback={<LoadingSkeleton variant="spinner" />}>
-        <LoginPage />
-      </Suspense>
     );
   }
 
@@ -155,6 +146,7 @@ function App() {
         onViewChange={handleViewChange}
         isMobileOpen={isMobileMenuOpen}
         onMobileToggle={() => setMobileMenuOpen(!isMobileMenuOpen)}
+        user={user}
       />
       
       <main className="flex-1 overflow-auto lg:ml-64">
