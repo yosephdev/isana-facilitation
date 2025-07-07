@@ -2,6 +2,10 @@
 
 A comprehensive React-based web application designed for therapists and counselors to manage clients and sessions with a calm, professional UI/UX.
 
+[Try Isana Live](https://yosephdev.github.io/isana-facilitation/) | [View Demo](#features)
+
+![Isana Facilitation App Preview](public/isana-preview.png)
+
 ## 🌟 Features
 
 ### Core Functionality
